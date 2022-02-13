@@ -2,15 +2,25 @@
 #include <SSInputUnit.h>
 #include <SSOutputUnit.h>
 #include <Basic_Input.h>
+#include <Buzzer.h>
 
-
+buzzer myBuzzer;
+int buzzerPin = 3;
+int pitchIncrement = 100;
 
 void setup() {
-  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(buzzerPin, OUTPUT);
+  myBuzzer.setup_buzzer(buzzerPin);
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  myBuzzer.switch_on();
+  delay(1000);
+  myBuzzer.switch_off();
+  //myBuzzer.set_pitch(myBuzzer.get_pitch()+pitchIncrement);
+  delay(1000);
+  
 
 }

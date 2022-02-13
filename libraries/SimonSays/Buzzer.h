@@ -1,5 +1,5 @@
-#ifndef BUZZER
-#define BUZZER
+#ifndef BUZZER_h
+#define BUZZER_h
 
 #ifdef COMPILE_CPP_NOT_ARDUINO
 #include "..\All_Arduino_or_Cpp_symboldefines\All_Arduino_or_Cpp_symboldefines.h"
@@ -22,8 +22,8 @@ protected:
 
 	void setEnabled(boolean enabled) { buzzer_enabled = enabled; }
 	void setOn(boolean isOn) { buzzer_on = isOn; }
-	void set_pin_on() { analogWrite(out_pin, pitch); }
-	void set_pin_off() { analogWrite(out_pin, 0); }
+	//void set_pin_on() { analogWrite(out_pin, pitch); }
+	//void set_pin_off() { analogWrite(out_pin, 0); }
 
 	// initialize variables to default values
 	void set_default_vals()
@@ -57,8 +57,8 @@ public:
 		if (isEnabled() && !isOn())
 		{
 			// switch LED ON
-			tone(out_pin, pitch)
-			set_pin_on();
+			tone(out_pin, pitch);
+			//set_pin_on();
 			setOn(true);
 		}
 
@@ -67,8 +67,8 @@ public:
 	{
 		if (isEnabled() && isOn())
 		{
-			noTone(out_pin)
-			set_pin_off();
+			noTone(out_pin);
+			//set_pin_off();
 			setOn(false);
 		}
 
@@ -105,7 +105,7 @@ public:
 			in_pwm = abs(in_pwm);
 			// set a  value
 			pitch = min(in_pwm, 4000);
-			set_pin_on();
+			//set_pin_on();
 			// switch off if needed
 			if (switch_back_off)
 				switch_off();
