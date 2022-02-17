@@ -3,3 +3,46 @@
 #else
 #include <Arduino.h>
 #endif
+#include <Buzzer.h>
+
+class outputUnit {
+protected:
+	buzzer myBuzzer;
+	//C4, E4, G4, B4, D5. Why not.
+	static const int MAX_SIZE = 5;
+	int frequencies[MAX_SIZE] = { 261, 329, 392, 493, 587 };
+	int buzzerPin;
+	//feedback for playing a higher-pitched sound.
+	int higherFreq;
+
+public:
+	outputUnit() {
+		higherFreq = 30;
+	}
+	outputUnit(int pinNo) {
+		buzzerPin = pinNo;
+		myBuzzer.setup_buzzer(buzzerPin);
+	}
+	void playSound(int index) {
+		myBuzzer.set_pitch(frequencies[index]);
+		myBuzzer.switch_on();
+		delay(1000);
+		myBuzzer.switch_off();
+	}
+	//used to play the users' button presses
+	void playFeedbackSound(int index) {
+		myBuzzer.set_pitch(frequencies[index] + higherFreq);
+		myBuzzer.switch_on();
+		delay(1000);
+		myBuzzer.switch_off();
+	}
+	void startGameMessage() {
+		Serial.println("Welcome to the Simon Says game!");
+	}
+	void printGameStatus(int currentScore) {
+		Serial.print("Current score is");
+		Serial.println(currentScore);
+
+	}
+
+};

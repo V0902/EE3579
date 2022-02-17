@@ -56,7 +56,7 @@ public:
 	{
 		if (isEnabled() && !isOn())
 		{
-			// switch LED ON
+			// switch buzzer ON
 			tone(out_pin, pitch);
 			//set_pin_on();
 			setOn(true);
