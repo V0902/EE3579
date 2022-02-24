@@ -12,10 +12,16 @@ protected:
 
 	bool binaryInputs[5] = { false, false, false, false, false };
 	in_digital digitalPins[5];
+	int analogVal;
 	int size;
+	int analogPin;
+	int difficulty;
 public:
 	inputUnit(int givenSize) {
 		size = givenSize;
+	}
+	void setPotentiometer(int pin){
+		analogPin = pin;
 	}
 	void setDigitalPins(int pins[5]) {
 		for (int i = 0; i < size; i++) {
@@ -23,6 +29,11 @@ public:
 			//TODO. ADD HANDLING FOR INVALID PINS
 			digitalPins[i].setup_in_digital(pins[i], true);
 		}
+	}
+	int setDifficultyPin(){
+		analogVal = analogRead(analogPin);
+		difficulty = (analogVal<=200) ? 1 : ((analogVal <=400) ? 2 : ((analogVal<= 600) ? 3 : ((analogVal<= 800) ? 4 : 5)));
+		return difficulty;
 	}
 	void readBinaryInputs() {
 		for (int i = 0; i < size; i++) {
@@ -44,13 +55,15 @@ public:
 	}
 
 	int returnPressedButton() {
+		int flag = -1;
 		for (int i = 0; i < size; i++) {
 			if (binaryInputs[i]) {
 				//for now, assuming that the user will click one button at a time.
-				return i;
+				flag = i;
 			}
 		}
 		resetButtons();
+		return flag;
 	}
 };
 

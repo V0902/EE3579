@@ -21,6 +21,7 @@ public:
 	}
 	outputUnit(int pinNo) {
 		buzzerPin = pinNo;
+		higherFreq = 30;
 		myBuzzer.setup_buzzer(buzzerPin);
 	}
 	void playSound(int index) {
@@ -54,9 +55,11 @@ public:
 
 	void startGameMessage() {
 		Serial.println("Welcome to the Simon Says game! A match spans 6 games + an additional tie-breaker, if necessary.");
+		Serial.println("Please choose difficulty first by spinning the potentiometer. Higher pitch = lower difficulty.");
+		Serial.println("Once you have selected your difficulty, please press any button to confirm it.");
 	}
 	void printGameStatus(int currentScore) {
-		Serial.print("Current score is");
+		Serial.print("Current score is ");
 		Serial.println(currentScore);
 	}
 	void startCountdown(int seconds){

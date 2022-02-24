@@ -97,14 +97,7 @@ private:
 		return true;
 	}
 
-	
-
-
-
 };
-
-
-
 
 
 
