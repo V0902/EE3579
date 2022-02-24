@@ -36,12 +36,38 @@ public:
 		delay(1000);
 		myBuzzer.switch_off();
 	}
+	//functions that will be called through the control unit, purely user output.
+	void gameLostSound(){
+		//hard coded to save memory.
+		myBuzzer.set_pitch(100);
+		myBuzzer.switch_on();
+		delay(3000);
+		myBuzzer.switch_off();
+	}
+		void gameWonSound(){
+		//Might make this a funky tune or sth.
+		myBuzzer.set_pitch(1500);
+		myBuzzer.switch_on();
+		delay(3000);
+		myBuzzer.switch_off();
+	}
+
 	void startGameMessage() {
-		Serial.println("Welcome to the Simon Says game!");
+		Serial.println("Welcome to the Simon Says game! A match spans 6 games + an additional tie-breaker, if necessary.");
 	}
 	void printGameStatus(int currentScore) {
 		Serial.print("Current score is");
 		Serial.println(currentScore);
+	}
+	void startCountdown(int seconds){
+	myBuzzer.set_pitch(700);
+		for(int i = seconds; i > 0; i--){
+			Serial.println(i);
+			myBuzzer.switch_on();
+			delay(200);
+			myBuzzer.switch_off();
+			delay(800);
+		}
 
 	}
 

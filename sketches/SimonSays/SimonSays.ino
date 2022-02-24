@@ -36,7 +36,10 @@ void loop() {
   //assign it a variable
   buttonPressed = inputControl.returnPressedButton();
   //play sound based on which button was pressed.
-  outputControl.playFeedbackSound(buttonPressed);
+  if(buttonPressed){
+     outputControl.playFeedbackSound(buttonPressed);
+  }
+
   
 }
 
