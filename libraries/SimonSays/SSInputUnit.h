@@ -11,17 +11,30 @@ protected:
 	//array of binary inputs, for each button.
 
 	bool binaryInputs[5] = { false, false, false, false, false };
+	int previousDetection[5] = {HIGH, HIGH, HIGH, HIGH, HIGH};
 	in_digital digitalPins[5];
 	int analogVal;
 	int size;
 	int analogPin;
 	int difficulty;
+	unsigned long lastButtonPress;
+	int breakBetweenPresses;
+	bool canPressButton;
 public:
 	inputUnit(int givenSize) {
 		size = givenSize;
+		canPressButton = true;
+		breakBetweenPresses = 300;
 	}
 	void setPotentiometer(int pin){
 		analogPin = pin;
+	}
+	//small scale time management. 
+	void update(){
+		//this is largely irrelevant, but prevents two button presses at almost the same time.
+		if(!canPressButton && millis() - lastButtonPress >= breakBetweenPresses){
+			canPressButton = true;
+		}
 	}
 	void setDigitalPins(int pins[5]) {
 		for (int i = 0; i < size; i++) {
@@ -36,14 +49,25 @@ public:
 		return difficulty;
 	}
 	void readBinaryInputs() {
-		for (int i = 0; i < size; i++) {
-			//detection variable, pass by reference.
-			int detection;
-			digitalPins[i].read_input(detection);
-			if (detection == LOW) {
-				Serial.print("Button pressed at index ");
-				Serial.println(i);
-				binaryInputs[i] = true;
+		if(canPressButton){
+			for (int i = 0; i < size; i++) {
+				//detection variable, pass by reference.
+				int detection;
+				digitalPins[i].read_input(detection);
+				if (detection == LOW) {
+					//checking whether it's a new button press
+					if(previousDetection[i] == HIGH){
+						Serial.print("Button pressed at index ");
+						Serial.println(i);
+						binaryInputs[i] = true;
+						canPressButton = false;
+						lastButtonPress = millis();
+					}
+					previousDetection[i] = LOW;
+				}
+				else if (detection == HIGH){
+					previousDetection[i] = HIGH;
+				}
 			}
 		}
 	}
@@ -58,7 +82,7 @@ public:
 		int flag = -1;
 		for (int i = 0; i < size; i++) {
 			if (binaryInputs[i]) {
-				//for now, assuming that the user will click one button at a time.
+				//one button press during one clock.
 				flag = i;
 			}
 		}

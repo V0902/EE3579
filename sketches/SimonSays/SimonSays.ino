@@ -26,6 +26,7 @@ void setup() {
 
 void loop() {
   int buttonPressed;
+  /*
   //testing whether the pins can make a sound.
   if(!initialTest){
     for(int i =0; i < userSize; i++){
@@ -35,7 +36,10 @@ void loop() {
     initialTest = !initialTest;
     Serial.println("Audio tests finished");
   }
-
+  */
+  //update clocks
+  inputControl.update();
+  outputControl.update();
   //check if any button has been pressed
   if(!difficultySelected){
     outputControl.playSound(inputControl.setDifficultyPin()-1);
@@ -43,15 +47,19 @@ void loop() {
     if(inputControl.returnPressedButton()>=0){
       Serial.println("Difficulty chosen.");
       difficultySelected = true;
+      delay(1000);
     };
   }
+
   else{
     inputControl.readBinaryInputs();
     //assign it a variable
     buttonPressed = inputControl.returnPressedButton();
     //play sound based on which button was pressed.
+    
     if(buttonPressed >=0){
        outputControl.playFeedbackSound(buttonPressed);
+
     }
   }
 

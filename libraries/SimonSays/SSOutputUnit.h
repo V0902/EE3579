@@ -14,15 +14,22 @@ protected:
 	int buzzerPin;
 	//feedback for playing a higher-pitched sound.
 	int higherFreq;
+	bool feedbackSoundPlaying;
+	unsigned long soundPlayStart;
+	int playTime;
 
 public:
 	outputUnit() {
-		higherFreq = 30;
+		reset();
 	}
 	outputUnit(int pinNo) {
+		reset();
 		buzzerPin = pinNo;
-		higherFreq = 30;
 		myBuzzer.setup_buzzer(buzzerPin);
+	}
+	void reset(){
+		higherFreq = 30;
+		playTime = 1000;
 	}
 	void playSound(int index) {
 		myBuzzer.set_pitch(frequencies[index]);
@@ -32,21 +39,37 @@ public:
 	}
 	//used to play the users' button presses
 	void playFeedbackSound(int index) {
+		if(feedbackSoundPlaying){
+			stopPlayingFeedbackSound();
+		}
 		myBuzzer.set_pitch(frequencies[index] + higherFreq);
 		myBuzzer.switch_on();
-		delay(1000);
+		feedbackSoundPlaying = true;
+		soundPlayStart = millis();
+	}
+	void stopPlayingFeedbackSound(){
 		myBuzzer.switch_off();
+		feedbackSoundPlaying = false;
+	}
+	//low-level time managment for feedback sounds playing.
+	void update(){
+		if((millis() - soundPlayStart >= playTime) && feedbackSoundPlaying){
+			stopPlayingFeedbackSound();
+
+		}
 	}
 	//functions that will be called through the control unit, purely user output.
 	void gameLostSound(){
 		//hard coded to save memory.
+		Serial.println("Game lost.");
 		myBuzzer.set_pitch(100);
 		myBuzzer.switch_on();
 		delay(3000);
 		myBuzzer.switch_off();
 	}
-		void gameWonSound(){
+	void gameWonSound(){
 		//Might make this a funky tune or sth.
+		Serial.println("Game won.");
 		myBuzzer.set_pitch(1500);
 		myBuzzer.switch_on();
 		delay(3000);
@@ -62,8 +85,11 @@ public:
 		Serial.print("Current score is ");
 		Serial.println(currentScore);
 	}
-	void startCountdown(int seconds){
-	myBuzzer.set_pitch(700);
+	//no time managment needed as user is not to input any data at this moment.
+	void startCountdown(int seconds) {
+		Serial.println("Starting countdown...");
+		delay(1000);
+		myBuzzer.set_pitch(700);
 		for(int i = seconds; i > 0; i--){
 			Serial.println(i);
 			myBuzzer.switch_on();
@@ -71,7 +97,7 @@ public:
 			myBuzzer.switch_off();
 			delay(800);
 		}
-
 	}
+
 
 };
