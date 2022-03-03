@@ -18,23 +18,33 @@ protected:
 	unsigned long soundPlayStart;
 	int playTime;
 
+	//I found using inheritance redundant and easier to keep it this way.
+	bool advanced;
+
 public:
 	outputUnit() {
 		reset();
 	}
 	outputUnit(int pinNo) {
 		reset();
+		setPin(pinNo);
+	}
+	void setPin(int pinNo){
 		buzzerPin = pinNo;
 		myBuzzer.setup_buzzer(buzzerPin);
 	}
 	void reset(){
-		higherFreq = 30;
+		higherFreq = 0;
 		playTime = 1000;
+		advanced = false;
 	}
 	void playSound(int index) {
 		myBuzzer.set_pitch(frequencies[index]);
 		myBuzzer.switch_on();
-		delay(1000);
+		//this is bad and does not provide functionality for multiple Simon Says games in parallel.
+		//Regardless, it is a very convenient way of dealing with timing so that the programme is hanging
+		//when playing sounds.
+		delay(playTime);
 		myBuzzer.switch_off();
 	}
 	//used to play the users' button presses
@@ -68,7 +78,8 @@ public:
 		myBuzzer.switch_off();
 	}
 	void gameWonSound(){
-		//Might make this a funky tune or sth.
+		//Might make this sound good.
+
 		Serial.println("Game won.");
 		myBuzzer.set_pitch(1500);
 		myBuzzer.switch_on();
@@ -78,7 +89,7 @@ public:
 
 	void startGameMessage() {
 		Serial.println("Welcome to the Simon Says game! A match spans 6 games + an additional tie-breaker, if necessary.");
-		Serial.println("Please choose difficulty first by spinning the potentiometer. Higher pitch = lower difficulty.");
+		Serial.println("Please choose difficulty first by spinning the potentiometer. Higher pitch = higher difficulty.");
 		Serial.println("Once you have selected your difficulty, please press any button to confirm it.");
 	}
 	void printGameStatus(int currentScore) {
@@ -90,7 +101,7 @@ public:
 		Serial.println("Starting countdown...");
 		delay(1000);
 		myBuzzer.set_pitch(700);
-		for(int i = seconds; i > 0; i--){
+		for(int i = seconds; i >= 0; i--){
 			Serial.println(i);
 			myBuzzer.switch_on();
 			delay(200);
@@ -98,6 +109,9 @@ public:
 			delay(800);
 		}
 	}
+	//advanced functions.
+	void setAdvanced(bool a){advanced = a; higherFreq= a ?  30:0;}
+	void setRespTime(float modifier){playTime = playTime*modifier;}
 
 
 };

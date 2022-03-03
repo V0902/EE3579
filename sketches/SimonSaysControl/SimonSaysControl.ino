@@ -15,7 +15,8 @@ controlUnit control;
 bool initialTest = false;
 bool difficultySelected = false;
 bool gameFinished = false;
-bool countdown = false;
+bool countdown1 = false;
+bool countdown2 = false;
 
 
 void setup() {
@@ -25,6 +26,7 @@ void setup() {
   inputControl.setPotentiometer(difficultyPin);
   //now all the pins have been set.
   outputControl.startGameMessage();
+  control.setDebug(true);
 }
 
 void loop() {
@@ -40,8 +42,9 @@ void loop() {
     outputControl.playSound(inputControl.setDifficultyPin()-1);
     inputControl.readBinaryInputs();
     if(inputControl.returnPressedButton()>=0){
-      Serial.println("Difficulty chosen.");
-      control.setDifficulty(inputControl.returnPressedButton());
+      Serial.println("Difficulty chosen:");
+      Serial.println(inputControl.setDifficultyPin());
+      control.setDifficulty(inputControl.setDifficultyPin());
       difficultySelected = true;
       delay(1000);
     };
@@ -53,7 +56,13 @@ void loop() {
     int outcome = control.update();
     
     //Play this round?
-    if(outcome == 2){     
+    if(outcome == 2){
+      //if about to play cues, countdown first for prep.
+      if(!countdown1){
+        outputControl.startCountdown(3);
+        countdown1 = true;
+        control.startAcceptingInputs();
+      }     
       //Check whether the sounds are being played right now.
       if(control.playingCues()){
         int thisCue = control.accessCurrentCue();
@@ -62,9 +71,10 @@ void loop() {
       }
       //We are now in the state of accepting input.
       //Play countdown first.
-      if(!countdown){
-        outputControl.startCountdown(3000);
-        countdown = true;
+      if(!countdown2){
+        outputControl.startCountdown(3);
+        countdown2 = true;
+        control.startAcceptingInputs();
       }
       //countdown finished. Read button presses on every iteration.
 
@@ -80,7 +90,8 @@ void loop() {
     else if(outcome == 0){
       outputControl.printGameStatus(control.getScore());
       control.generateCueSequence(userSize);
-      countdown = false;
+      countdown1 = false;
+      countdown2 = false;
     }
     //Game won?
     else if(outcome == 1){

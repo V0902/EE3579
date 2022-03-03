@@ -21,12 +21,31 @@ protected:
 	int breakBetweenPresses;
 	bool canPressButton;
 public:
+	inputUnit() {
+		reset();
+	}
+
 	inputUnit(int givenSize) {
-		size = givenSize;
+		reset();
+		setSize(givenSize);
+	}
+	void reset(){
 		canPressButton = true;
 		breakBetweenPresses = 300;
+		size = 5;
+	}
+	void setSize(int givenSize){
+	if(size >5 || size < 0){
+		Serial.println("fatal error - supplied size is bigger than allowed. Aborting...");
+		return;
+	}
+		size = givenSize;
 	}
 	void setPotentiometer(int pin){
+	if(pin < A0 || pin > A5){ //for analog pins
+		Serial.println("Fatal error - potentiometer pin is not recognized. Aborting...");
+		return;
+	}
 		analogPin = pin;
 	}
 	//small scale time management. 
@@ -39,7 +58,11 @@ public:
 	void setDigitalPins(int pins[5]) {
 		for (int i = 0; i < size; i++) {
 			//initializaiton of the in_digital array.
-			//TODO. ADD HANDLING FOR INVALID PINS
+			
+			if(pins[i] < 0 || pins[i] > 13){
+				Serial.println("Fatal error - bad pin number for Arduino Uno.");
+				return;
+			}
 			digitalPins[i].setup_in_digital(pins[i], true);
 		}
 	}

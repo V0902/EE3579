@@ -21,7 +21,7 @@ protected:
 	int previousResponseTime;	//used to record how much time player took
 	int playerResponse;			//How many time has the player responded?
 	int currentCue;				//what cue is being played right now?
-
+	int weirdFlag;				//this is a bad practice but I couldnt figure out how to fix something differently.
 
 	unsigned long lastResponseTime;
 
@@ -31,7 +31,7 @@ protected:
 	bool matchWon;
 	bool matchLost;
 
-private:
+	bool debug;
 	bool compareArrays(){
 		for(int i = 0; i < sequenceLength; i++){
 			if(playerResponses[i] != cueToPlay[i]){
@@ -48,8 +48,11 @@ public:
 
 	//potentiometer ranges are handled inside InputUnit. difficulty ranges between 1 - 5.
 	void setDifficulty(int difficulty){
-		if(difficulty>0 && difficulty <5){
+		if(difficulty>0 && difficulty <6){
 			sequenceLength = difficulty +2;
+		}
+		else{
+			Serial.println("Invalid value of difficulty supplied.");
 		}
 	}
 	//set how long the user gets to resond.
@@ -60,6 +63,7 @@ public:
 		if(acceptInput){
 			playerResponses[playerResponse] = response;
 			playerResponse+=1;
+			lastResponseTime = millis();
 		}
 	}
 	void reset(){
@@ -67,9 +71,11 @@ public:
 		currentGame = 0;
 		currentCue = 0;
 		gamesWon = 0;
+		weirdFlag = 0;
 		matchWon = false;
 		matchLost = false;
 		sequenceGenerated = false;
+		playCues = false;
 		acceptInput = false;
 		setUnitResponse(2000);
 	}
@@ -84,9 +90,16 @@ public:
 				}
 			sequenceGenerated = true;
 		}
+		if(debug){
+			Serial.println("Sequence generated.");
+		}
 	}
 	int accessCurrentCue(){
 	//after accessing cue, increment
+		if(debug){
+			Serial.print("Current cue being played is: ");
+			Serial.println(cueToPlay[currentCue]);
+		}
 		return cueToPlay[currentCue++];
 	}
 
@@ -102,10 +115,10 @@ public:
 	//function called to check what state the game is in.
 		updateScore();
 		//check if any player has won when reaching game 6
-		if(currentGame == 5 and gamesWon >3){
+		if(currentGame >= 6 and gamesWon >3){
 			return 1;
 		}
-		else if(currentGame == 5 && gamesWon <3){
+		else if(currentGame >= 6 && gamesWon <3){
 			return -1;
 		}
 		else{
@@ -115,14 +128,16 @@ public:
 	}
 	//update the state of game. 1 - player won, -1 = player lost, 0 - move on to next round, 2 - stay in same round.
 	int update(){
-
 		//if sequence is not generated, treat it as if we were moving on to the next round.
+		//This is for the start of the game mainly.
 		if(!sequenceGenerated){
 			return 0;
 		}
 		//After sequence is generated & cues have been played, start accepting inputs.
 		else if (playCues == false){
 			acceptInput = true;
+			weirdFlag +=1;	//making sure the next checkGameStatus() will not be made same iteration as the first call of this.
+
 		}
 		//Check if we're playing the cues.
 		if(currentCue < sequenceLength){
@@ -134,10 +149,15 @@ public:
 		}
 
 		//check whether player failed to respond in time OR answered on time. Check responses.
-		if(acceptInput && ((millis() - lastResponseTime >= timeToRespond)||(playerResponse == sequenceLength))){
-			acceptInput = false;
-			return checkGameStatus();
+		if(weirdFlag > 1){
+			if(acceptInput && ((millis() - lastResponseTime >= timeToRespond)||(playerResponse >= sequenceLength))){
+				acceptInput = false;
+
+				weirdFlag = 0;
+				return checkGameStatus();
+			}
 		}
+
 
 		//no special events happened. Carry on within the same round.
 		return 2;
@@ -145,6 +165,8 @@ public:
 	}
 	bool readyForGeneration(){return !sequenceGenerated;}
 	bool playingCues(){return playCues;}
+	void startAcceptingInputs(){lastResponseTime = millis();}
+	void setDebug(bool b){debug = b;}
 	int getScore(){return gamesWon;}
 
 
