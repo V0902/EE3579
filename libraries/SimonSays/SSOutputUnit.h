@@ -17,6 +17,7 @@ protected:
 	bool feedbackSoundPlaying;
 	unsigned long soundPlayStart;
 	int playTime;
+	int playerGivenTime;
 
 	//I found using inheritance redundant and easier to keep it this way.
 	bool advanced;
@@ -36,6 +37,7 @@ public:
 	void reset(){
 		higherFreq = 0;
 		playTime = 1000;
+		playerGivenTime = 1000;
 		advanced = false;
 	}
 	void playSound(int index) {
@@ -71,19 +73,30 @@ public:
 	//functions that will be called through the control unit, purely user output.
 	void gameLostSound(){
 		//hard coded to save memory.
+		delay(1000);
+		myBuzzer.switch_off();
 		Serial.println("Game lost.");
-		myBuzzer.set_pitch(100);
 		myBuzzer.switch_on();
-		delay(3000);
+		myBuzzer.set_pitch(100);
+		delay(1500);
+		myBuzzer.set_pitch(80);
+		delay(1500);
+		myBuzzer.set_pitch(60);
+		delay(1500);
 		myBuzzer.switch_off();
 	}
 	void gameWonSound(){
+		delay(1000);
 		//Might make this sound good.
-
+		myBuzzer.switch_off();
 		Serial.println("Game won.");
-		myBuzzer.set_pitch(1500);
+		myBuzzer.set_pitch(1300);
 		myBuzzer.switch_on();
-		delay(3000);
+		delay(1500);
+		myBuzzer.set_pitch(1400);
+		delay(1500);
+		myBuzzer.set_pitch(1500);
+		delay(1500);
 		myBuzzer.switch_off();
 	}
 
@@ -111,7 +124,8 @@ public:
 	}
 	//advanced functions.
 	void setAdvanced(bool a){advanced = a; higherFreq= a ?  30:0;}
-	void setRespTime(float modifier){playTime = playTime*modifier;}
+	void setRespTime(float modifier){playTime = (modifier > 1.1)? playTime*modifier/4 : playTime*modifier; 
+	playerGivenTime = playerGivenTime * modifier;}
 
 
 };

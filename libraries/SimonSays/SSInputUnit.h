@@ -9,7 +9,6 @@
 class inputUnit {
 protected:
 	//array of binary inputs, for each button.
-
 	bool binaryInputs[5] = { false, false, false, false, false };
 	int previousDetection[5] = {HIGH, HIGH, HIGH, HIGH, HIGH};
 	in_digital digitalPins[5];

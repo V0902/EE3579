@@ -13,11 +13,12 @@
 class advancedControlUnit : public controlUnit{
 public:
 	advancedControlUnit(){
-	//that's how we make each run variable :)
-		srand(time(NULL));
+
 	}
 	void setDifficulty(int difficulty, float& playTimeModifier){
 		if(difficulty>0 && difficulty <6){
+			//that's how we make each run variable. Seed depends on when user selects difficulty.
+			srand(millis());
 			//still increases the sequence length.
 			sequenceLength = difficulty +2;
 			//hard coded speed decrease for response time. From 1.0 to 0.6 normal response.
@@ -34,6 +35,5 @@ public:
 			Serial.println("Invalid value of difficulty supplied.");
 		}
 	}
-
 
 };

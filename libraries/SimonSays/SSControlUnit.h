@@ -15,7 +15,7 @@ protected:
 	int sequenceLength;
 	int timeToRespond;
 	int gamesWon;
-	//7, because maximum of 7 ques.
+	//7, because maximum of 7 cues (on max difficulty).
 	int playerResponses[7];
 	int cueToPlay[7];
 	int previousResponseTime;	//used to record how much time player took
@@ -62,8 +62,12 @@ public:
 	void getPlayerInput(int response){
 		if(acceptInput){
 			playerResponses[playerResponse] = response;
+			if(playerResponse == 0){
+				//I've accidentally implemented the other feature so this is a quick fix
+				lastResponseTime = millis();
+			}
 			playerResponse+=1;
-			lastResponseTime = millis();
+
 		}
 	}
 	void reset(){
@@ -137,7 +141,6 @@ public:
 		else if (playCues == false){
 			acceptInput = true;
 			weirdFlag +=1;	//making sure the next checkGameStatus() will not be made same iteration as the first call of this.
-
 		}
 		//Check if we're playing the cues.
 		if(currentCue < sequenceLength){
@@ -147,23 +150,18 @@ public:
 		else{
 			playCues = false;
 		}
-
 		//check whether player failed to respond in time OR answered on time. Check responses.
 		if(weirdFlag > 1){
-			if(acceptInput && ((millis() - lastResponseTime >= timeToRespond)||(playerResponse >= sequenceLength))){
+			if(acceptInput && ((millis() - lastResponseTime >= timeToRespond*sequenceLength)||(playerResponse >= sequenceLength))){
 				acceptInput = false;
-
 				weirdFlag = 0;
 				return checkGameStatus();
 			}
 		}
-
-
 		//no special events happened. Carry on within the same round.
 		return 2;
 
 	}
-	bool readyForGeneration(){return !sequenceGenerated;}
 	bool playingCues(){return playCues;}
 	void startAcceptingInputs(){lastResponseTime = millis();}
 	void setDebug(bool b){debug = b;}

@@ -34,6 +34,9 @@ void loop() {
        delay(1000);
     }
     initialTest = !initialTest;
+    outputControl.gameWonSound();
+    outputControl.gameLostSound();
+    outputControl.startCountdown(1);
     Serial.println("Audio tests finished");
   }
   
@@ -50,6 +53,7 @@ void loop() {
       delay(1000);
     };
   }
+
 
   else{
     inputControl.readBinaryInputs();
