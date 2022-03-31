@@ -13,7 +13,7 @@ int choice;
 void setup()
 {  
   //1- OR sense magnet; 2 - AND sense magnet, 3 - XOR sense magnet.
-  choice = 3;
+  choice = 1;
   // initialize as output pin (only needed once).
   int detect_led_pin = 6;
   detect_led.setup_LED(detect_led_pin);
