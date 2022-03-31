@@ -27,7 +27,7 @@ void setup()
   speed_check.setInterCheck(speed_control_ms);  
   Serial.begin(9600);  
 
-}
+} 
 
 void loop()
 {
@@ -40,6 +40,7 @@ void loop()
     if(RPM>=0)
     {
       Serial.print("revs per min  = ");
+
       Serial.println(RPM);
     }
     else

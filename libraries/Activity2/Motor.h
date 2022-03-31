@@ -26,13 +26,20 @@ protected:
 	in_digital  digitalPins[3];
 	
 	//time between button presses
-	int delayTime = 200;
+	int delayTime;
 	long int lastButtonPress;
+
+	//jumpstart
+	int jumpstartValue;
+	int minValue;
 
 public:
 	void reset(){
+		int delayTime = 800;
 		isClockwise = true;
 		isOn = false;
+		int jumpstartValue = 90;
+		int minValue = 50;
 	}
 	Motor(){
 		reset();
@@ -87,7 +94,7 @@ public:
 		}
 	}
 	void setPowerPin(int pin){
-		if(pin!= 3 || pin !=5 || pin!=6 || pin!=9 || pin!= 10 ||pin !=11){
+		if(pin!= 3 && pin !=5 && pin!=6 && pin!=9 && pin!= 10 && pin !=11){
 			Serial.println("Fatal error - bad pin number for Arduino Uno. Choose variable digital pin.");
 			return;
 		}
@@ -102,16 +109,23 @@ public:
 	}
 	//button checks are performed on update()
 	void switchOn(){
+
 		power.switch_on();
+		if(power.get_brightness() < jumpstartValue){
+			power.set_brightness(jumpstartValue);
+		}
+		//Serial.println("Switching on")
 		isOn = true;
 	}
 	void switchOff(){
 		power.switch_off();
+		//Serial.println("Switching off")
 		isOn = false;
 	}
 	//resolves from 0 to 255
 	void setPower(int level){
 		//checks done inside the class
+		//Serial.println(level);
 		power.set_brightness(level);
 	}
 	
@@ -142,7 +156,6 @@ public:
 					//inside provided libraries. I don't have to check
 					//for whether the device is wtiched on or not as it's
 					//already done implicitely in Beginner_LED
-					Serial.println(i);
 					if(i == 0){
 						switchOn();
 					}
@@ -159,15 +172,21 @@ public:
 				}
 			}
 		}
-		//always look at the potentiometer. From 0-1023 we go to 0-255, so
+		//The potentiometer also waits (for jumpstar for example). From 0-1023 we go to 0-255, so
 		//a simple floor division by 4 suffices, and also minimizes noise
 		//only if it is on.
+		//It is inot in the same "if" as the lastButtonPress might have been updated.
 		if(isOn){
 			currentPow = readPotentiometer()/4;
+			//motor will stop below a certain value (with the LED)
+			currentPow = max(currentPow, minValue);
+			Serial.println(currentPow);
 			setPower(readPotentiometer()/4);
 		}
 
-
+	}
+	int getPwm(){
+		return power.get_brightness();
 	}
 
 };
