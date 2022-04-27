@@ -2,11 +2,13 @@
 #include <IntervalCheckTimer.h>
 #include <InterruptBasedSpeedMeasure.h>
 #include <Motor.h>
+#include <basic_speed_PID.h>
 
 InterruptSpeedMeasure_SMA rotation_counter;
 IntervalCheckTimer speed_check;
+basic_speed_PID pid;
 
-Motor motor;
+pidMotor motor;
 
 void setup()
 {
@@ -25,7 +27,7 @@ void setup()
   
   // timer to perform speed measurement and control at given interval:
   // set the time between speed measurements/control)
-  int speed_control_ms=500;  
+  int speed_control_ms=1000;  
   speed_check.setInterCheck(speed_control_ms);  
   Serial.begin(9600);  
 
@@ -39,10 +41,14 @@ void loop()
   if(speed_check.isMinChekTimeElapsedAndUpdate())
   {
     double RPM=rotation_counter.getRPMandUpdate();
+    int temp_pwm = (int)pid.ComputePID_output((double)motor.getTargetRpm(), (double)RPM);
     if(RPM>=0)
     {
-      Serial.print("revs per min (AVG)  = ");
+      Serial.print("Target pwm is "); Serial.println(motor.getTargetRpm());
+      Serial.print("pwm assigned by the PID: "); Serial.print(temp_pwm);
+      Serial.print("    |   revs per min (AVG)  = ");
       Serial.println(RPM);
+      motor.setPower(temp_pwm);
     }
     else
     {

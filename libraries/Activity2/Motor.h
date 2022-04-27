@@ -13,10 +13,13 @@ protected:
 	int startButtonPin, stopButtonPin, reverseButtonPin, potentiometerPin;
 	//0 - start, 1 - stop, 2 - change dir
 	int previousDetection[3] = {HIGH, HIGH, HIGH};
+	//securing from spurious reads.
+	int previousReads[2] = {0, 0};
 	//motor power control
 	int powerPin;
 	ana_LED power;
 	bool isOn;
+	bool pid;
 	int currentPow;
 	//motor direction control
 	int directionPin;
@@ -32,14 +35,17 @@ protected:
 	//jumpstart
 	int jumpstartValue;
 	int minValue;
+	bool dontUpdate;
 
 public:
 	void reset(){
-		int delayTime = 800;
+		delayTime = 1200;
+		pid = false;
 		isClockwise = true;
 		isOn = false;
-		int jumpstartValue = 90;
-		int minValue = 50;
+		dontUpdate = false;
+		jumpstartValue = 90;
+		minValue = 50;
 	}
 	Motor(){
 		reset();
@@ -111,9 +117,9 @@ public:
 	void switchOn(){
 
 		power.switch_on();
-		if(power.get_brightness() < jumpstartValue){
+		if(power.get_brightness() < jumpstartValue && !pid){
 			power.set_brightness(jumpstartValue);
-		}
+			}
 		//Serial.println("Switching on")
 		isOn = true;
 	}
@@ -139,6 +145,7 @@ public:
 		}
 	}
 	void update(){
+		dontUpdate = false;
 		//take a look at buttons if delay elapsed
 		if(millis()-lastButtonPress > delayTime){
 			//inspect all buttons
@@ -154,10 +161,11 @@ public:
 					previousDetection[i] = LOW;
 					//an enormous part of the heavy-lifting is done
 					//inside provided libraries. I don't have to check
-					//for whether the device is wtiched on or not as it's
+					//for whether the device is swtiched on or not as it's
 					//already done implicitely in Beginner_LED
 					if(i == 0){
 						switchOn();
+						dontUpdate = true;
 					}
 					else if(i == 1){
 						switchOff();
@@ -165,28 +173,106 @@ public:
 					else if(i == 2){
 						switchDirection();
 					}
-				}
-				
+
+				}			
 				else if (detection == HIGH){
 					previousDetection[i] = HIGH;
 				}
-			}
-		}
-		//The potentiometer also waits (for jumpstar for example). From 0-1023 we go to 0-255, so
-		//a simple floor division by 4 suffices, and also minimizes noise
-		//only if it is on.
-		//It is inot in the same "if" as the lastButtonPress might have been updated.
-		if(isOn){
-			currentPow = readPotentiometer()/4;
-			//motor will stop below a certain value (with the LED)
-			currentPow = max(currentPow, minValue);
-			Serial.println(currentPow);
-			setPower(readPotentiometer()/4);
-		}
 
+			}
+			updatePotentiometer();
+		}
+	}
+	void updatePotentiometer(){
+				//The potentiometer also waits (for jumpstart for example). From 0-1023 we go to 0-255, so
+				//a simple floor division by 4 suffices, and also minimizes noise
+				//only if it is on.
+				//It is in the same "if" as the lastButtonPress might have been updated.
+				if(isOn && !dontUpdate && !pid){
+					currentPow = readPotentiometer()/4;
+					//securing against singular spurious reading. checking if between two reads ago and now
+					//there hasn't been a weird reading that makes the programme behave bad.
+					//update if all the values are different - user is spinning the knob
+					if((currentPow != previousReads[0] && previousReads[1] != currentPow) || (currentPow == previousReads[1])){
+						//motor will stop below a certain value (with the LED)
+						currentPow = max(currentPow, minValue);
+						setPower(currentPow);
+					}
+					//otherwise, do nothing and keep the old reading.
+					//update the array
+					previousReads[0] = previousReads[1];
+					previousReads[1] = currentPow;
+
+					//HELP?
+					//Serial.println(getPwm());
+				}
 	}
 	int getPwm(){
 		return power.get_brightness();
+	}
+
+};
+
+class pidMotor: public Motor{
+protected:
+	int targetRpm;
+
+public:
+	pidMotor(){
+		pid = true;
+
+	}
+	//overwriting updatePotentiometer() to reflect that spinning the potentiometer changes the target RPM.
+	void updatePotentiometer(){
+		//this function will still be called inside update() from the base class
+		if(isOn && !dontUpdate){
+		//linear mapping. 0-255 to 600 - 10000 (more or less). I will first perform a floor division to get rid of some noise
+		//from the potentiometer reads
+		targetRpm = readPotentiometer()/4 * 37 + 600;
+		}
+	}
+	//this is upsetting, as I just wanted to "cheat" one function in, but it doesn't seem to work as it will call the base class and all the definitions from the base class.
+	void update(){
+		dontUpdate = false;
+		//take a look at buttons if delay elapsed
+		if(millis()-lastButtonPress > delayTime){
+			//inspect all buttons
+			for (int i = 0; i < 3; i++) {
+				//detection variable, pass by reference.
+				int detection;
+				digitalPins[i].read_input(detection);
+				if (detection == LOW) {
+					//checking whether it's a new button press
+					if(previousDetection[i] == HIGH){
+						lastButtonPress = millis();
+					}
+					previousDetection[i] = LOW;
+					//an enormous part of the heavy-lifting is done
+					//inside provided libraries. I don't have to check
+					//for whether the device is swtiched on or not as it's
+					//already done implicitely in Beginner_LED
+					if(i == 0){
+						switchOn();
+						dontUpdate = true;
+					}
+					else if(i == 1){
+						switchOff();
+					}
+					else if(i == 2){
+						switchDirection();
+					}
+
+				}			
+				else if (detection == HIGH){
+					previousDetection[i] = HIGH;
+				}
+
+			}
+			updatePotentiometer();
+		}
+	}
+	int getTargetRpm(){
+		return targetRpm;
 	}
 
 };

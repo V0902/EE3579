@@ -1,0 +1,51 @@
+start:
+	LDI r0, 0x15	//random numbers. fill it with anything
+	LDI r1, 0xA1	
+	LDI r2, 0x80	//will use register r2 as a means of checking whether MSB
+					//of the r0:r1 number is negative. r2 = 1000 0000
+	AND r2, r0		//Store the result in r2, which will be modified a number of times
+	
+	//Z flag updated. Result will be either 0 if number is positive or 8 if negative.
+	//If number is positive, that number is the magnitude.
+	
+	BREQ magnitudeCalculated
+	//if we're here, that means the number is negative. Let's calculate magnitude
+	COM r0
+	COM r1			//one's complement, then add one.
+	LDI r2, 0x00	//loading dummy variable, we need a 0
+	ADI r1, 0x01	//adding 1 (that's how you compute magnitude)
+	ADC r0, r2		//in case there was a carry, add it to r0.
+	//now we have calculated our magnitude.
+	
+magnitudeCalculated:
+	LDI r2, 0xFF	//loading R2 with 1111 1111 for an AND mask.
+	AND r2, r0		//if result of a mask is 0, that means the magnitude is lower than 255.
+	BREQ magnitudeLower
+	//if magnitude is bigger than 255, we do division by two
+	LDI r2, 0x00	//loading R2 with 0000 0000 to keep track of carry
+	LSR r0			//division by 2 by bit shift right. rightmost bit went into carry
+	ADC r2, r2 		//add carry to R2. If no carry, then we have a 0 flag.
+	
+	//if there's no carry, then we can proceed with a simple LSR on r1.
+	BREQ dontAddCarry
+	//if there is a carry, compute
+	LDI r2, 0x80	//loading 1000 0000 to add to r1
+	LSR r1			//simple bit shift right again.
+	ADD r1, r3		//carry bit added.
+	//now we have what we desired in r0 and r1.
+	RJMP end
+	
+dontAddCarry:
+	//no carry addition. simply shift right and finish.
+	LSR r1
+	RJMP end
+	
+magnitudeLower:
+	ADD r0, 0x01	//add 256 to the result.
+	ADI r1, 0xFF	//subtract 1.
+	RJMP end
+end:
+	NOP
+	
+	
+	
