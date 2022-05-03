@@ -6,8 +6,8 @@
 //class used for the collection of data
 class stepResponse{
 protected:
-	//will initialize all elements to 0.
-	int readingsValue[1000] = {};
+	//will initialize all elements to 0. Measure only for 150 seconds (at example measurement time 500ms)
+	int readingsValue[300] = {};
 	//
 	int currentIndex;
 	//parameters we're measuring
@@ -20,7 +20,7 @@ protected:
 
 	//timers
 	long int startTime;
-	long int measureSettlingTime;
+	long int tempSettlingTime;
 
 	//parameters
 	int targetValue = 2000;
@@ -31,12 +31,18 @@ protected:
 	int lowerBracket;
 
 	bool justCrossed;
+	bool isOn = false;
 
 public:
 
 	stepResponse(){
 		currentIndex = 0;
-		startTime = millis();
+	}
+	void turnOn(){
+		if(!isOn){
+			isOn = true;
+			startTime = millis();
+		}
 	}
 
 	void setParameters(int tV, int pbv, int sT){
@@ -49,15 +55,20 @@ public:
 		stableTime = sT;
 
 		//setting the brackets
-		upperBracket = (100 + percentageBracketValue)*targetValue/100;
-		lowerBracket = (100 - percentageBracketValue)*targetValue/100;
+		upperBracket = (100 + percentageBracketValue)*(double)targetValue/100;
+		lowerBracket = (100 - percentageBracketValue)*(double)targetValue/100;
+		Serial.println("Brackets:");
+		Serial.println(upperBracket);
+		Serial.println(lowerBracket);
 	}
+
+	
 
 	void takeMeasurement(int measurement){
 		//frankly speaking, it's a lot of computetions in one function, but it's probably fine.
 		readingsValue[currentIndex] = measurement;
 		//determining rise time
-		if(!riseTime && measurement > 9*targetValue/10){
+		if(!riseTime && (measurement > 9*targetValue/10)){
 			riseTime = millis() - startTime; 
 		}
 		//determining peak
@@ -71,22 +82,24 @@ public:
 			if(readingsValue[currentIndex -4] > tempPeak && readingsValue[currentIndex-3] > tempPeak 
 			&& readingsValue[currentIndex-1] > tempPeak && measurement > tempPeak){
 				settlingMin = tempPeak;
-				//todo: add interval timer between measurements
-				settlingMinTime = millis() - startTime; //-2*interval 
+				settlingMinTime = millis() - startTime - 1000; 
 			}
 		}
 
+		//determinig stable time
 		if(measurement < upperBracket && measurement > lowerBracket && justCrossed){
-			//nothing
+			if(millis() - tempSettlingTime > stableTime){
+				settlingTime = tempSettlingTime;
+			}
 		}
 		//reset time upon first entry into the stable position
 		else if(measurement < upperBracket && measurement > lowerBracket && !justCrossed){
 			justCrossed = true;
-			settlingTime = millis() -startTime;
+			tempSettlingTime = millis() -startTime;
 		}
 		//not in the brackets - reset everything.
 		else{
-			settlingTime = 0;
+			tempSettlingTime = 0;
 			justCrossed = false;
 		}
 
@@ -94,7 +107,16 @@ public:
 
 		currentIndex +=1;
 	}
-}
+	void printParameters(){
+		Serial.println("-------"); 	Serial.print("Rise time is: "); Serial.println((double)riseTime/1000);
+		Serial.print("Peak time is: "); Serial.println((double)peakTime/1000);
+		Serial.print("Peak is: "); Serial.println(peak);
+		Serial.print("Settling min time is: "); Serial.println((double)settlingMinTime/1000);
+		Serial.print("Setting min point is: "); Serial.println(settlingMin);
+		Serial.print("Settling time is: "); Serial.println((double)settlingTime/1000);
+		Serial.println("-------");
+	}
+};
 
 
 
